@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,28 +26,20 @@ public class StudentService {
 	}
 	public Map<String, String> passFailMap(){
 		List<Student> list = repo.findAll();
-		Map<String, String> pfMap = new HashMap<String,String>();
-		for(Student s: list) {
-			pfMap.put(s.getName(),(s.getScore()>=passMarks)?"Pass":"Fail");
-		}
-		return pfMap;
+		return list.stream().collect(Collectors.toMap(k->k.getName(), v->v.getScore()>=passMarks ? "PASS":"FAIL"));
 	}
 	public Map<String, Integer> passFailCount(){
-		List<Student> list = repo.findAll();
-		Map<String, Integer> pfCount = new HashMap<String,Integer>();
-		int passCount = 0, failCount=0;
+		Map<String, Integer> passMap = repo.findAll().stream()
+		.filter(s->s.getScore()>=passMarks)
+		.collect(Collectors.toMap(k->"PASS", v->1,
+				(v1,v2)->v1+v2));
 		
-		for(Student s: list) {
-			if(s.getScore()<=passMarks) {
-				failCount++;
-			}
-			else {
-				passCount++;
-			}
-		}
-		
-		pfCount.put("pass",passCount);
-		pfCount.put("fail",failCount);
-		return pfCount;
+		Map<String, Integer> failMap = repo.findAll().stream()
+				.filter(s->s.getScore()<passMarks)
+				.collect(Collectors.toMap(k->"FAIL", v->1,
+						(v1,v2)->v1+v2));
+	
+		return Stream.concat(passMap.entrySet().stream(),failMap.entrySet().stream())
+		.collect(Collectors.toMap(k->k.getKey(), v->v.getValue()));	
 	}
 }

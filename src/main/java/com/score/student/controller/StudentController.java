@@ -27,7 +27,7 @@ public class StudentController {
 	}
 	
 	@RequestMapping(value = "report/pass-fail-count", method = RequestMethod.GET)
-	public Map<String, Integer> getPassFailCount(){
+	public Map<String, Integer>  getPassFailCount(){
 		return service.passFailCount();
 	}
 }
